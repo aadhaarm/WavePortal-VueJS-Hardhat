@@ -11,12 +11,14 @@
           </p>
         </v-card-text>
         <v-card-text>
-          <p>
-            Waves:: {{ waveCount }}
-          </p>
+          <ul v-if="currentAccount">
+            <li>Total Waves:: {{ waveCount }}</li>
+            <li>Collected Wallet:: {{ currentAccount }}</li>
+            <li>Wallet Balance:: {{ balance }} ETH</li>
+          </ul>
         </v-card-text>
 
-        <form>
+        <form v-if="currentAccount">
           <v-text-field label="Enter your Message" v-model="message" />
           <v-btn className="waveButton" v-on:click=wave color="primary">
             Wave at Me
@@ -25,7 +27,7 @@
 
         <v-card-actions>
           <v-spacer />
-          <v-btn v-if="!currentAccount" v-on:click=connectWallet color="primary">
+          <v-btn v-if="!currentAccount" v-on:click=connectWallet color="primary" levation="24">
             Connect Wallet
           </v-btn>
         </v-card-actions>
@@ -46,6 +48,7 @@
 <script>
 import { ethers } from "ethers";
 import abi from "~/assets/WavePortal.json";
+import Web3 from 'web3';
 
 export default {
   name: 'IndexPage',
@@ -56,13 +59,17 @@ export default {
       waveCount: 0,
       message: "",
       contractAddress: "0x291fcD82695Ea2BE42b2f2107BDe355cB093A504",
-      contractABI: abi.abi
+      contractABI: abi.abi,
+      walletAddr: "",
+      web3: {},
+      balance: 0
     }
   },
   mounted() {
+    this.web3 = new Web3(window.ethereum);
+    // console.log("Web3", this.web3);
     this.checkIfWalletIsConnected();
-    this.getCount();
-
+    // this.getCount();
     if (window.ethereum) {
       let provider = new ethers.providers.Web3Provider(window.ethereum);
       let signer = provider.getSigner();
@@ -130,6 +137,7 @@ export default {
           this.setCurrentAccount(account)
           this.getAllWaves();
           this.getCount();
+          this.getBalance();
         } else {
           console.log("No authorized account found")
         }
@@ -152,6 +160,7 @@ export default {
         this.setCurrentAccount(accounts[0]);
         this.getAllWaves();
         this.getCount();
+        this.getBalance();
       } catch (error) {
         console.log(error)
       }
@@ -229,6 +238,16 @@ export default {
     },
     setMessage(msg) {
       this.message = msg;
+    },
+    async getBalance() {
+      // console.log("currentAccount", this.currentAccount);
+      this.web3
+        .eth
+        .getBalance(this.currentAccount)
+        .then((val) => {
+          this.balance = this.web3.utils.fromWei(val);
+          // console.log(this.balance);
+        })
     }
   },
 }
