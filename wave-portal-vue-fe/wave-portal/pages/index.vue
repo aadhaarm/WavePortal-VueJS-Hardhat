@@ -12,7 +12,7 @@
         </v-card-text>
         <v-card-text>
           <p>
-            Total waves::<b>{{ waveCount }}</b>
+            Waves:: {{ waveCount }}
           </p>
         </v-card-text>
 
@@ -31,10 +31,10 @@
         </v-card-actions>
         <v-card-text>
           <ul>
-            <li v-for="wave in allWaves">
-              <div>Address: {{ wave.address }}</div>
+            <li v-for="wave in allWaves" style="padding: 15px;">
               <div>Time: {{ wave.timestamp.toString() }}</div>
-              <div>Message: {{ wave.message }}</div>
+              <div>Address: {{ wave.address }}</div>
+              <h3>Message: {{ wave.message }}</h3>
             </li>
           </ul>
         </v-card-text>
@@ -63,8 +63,12 @@ export default {
     this.checkIfWalletIsConnected();
     this.getCount();
 
-    let wavePortalContract;
-    this.onNewWave();
+    if (window.ethereum) {
+      let provider = new ethers.providers.Web3Provider(window.ethereum);
+      let signer = provider.getSigner();
+      let wavePortalContract = new ethers.Contract(this.contractAddress, this.contractABI, signer);
+      wavePortalContract.on("NewWave", this.onNewWave());
+    }
   },
   methods: {
     async getAllWaves() {
@@ -146,6 +150,8 @@ export default {
 
         console.log("Connected", accounts[0]);
         this.setCurrentAccount(accounts[0]);
+        this.getAllWaves();
+        this.getCount();
       } catch (error) {
         console.log(error)
       }
