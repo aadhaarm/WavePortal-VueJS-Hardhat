@@ -131,6 +131,7 @@ export default {
         * Check if we're authorized to access the user's wallet
         */
         const accounts = await ethereum.request({ method: "eth_accounts" });
+
         if (accounts.length !== 0) {
           const account = accounts[0];
           console.log("Found an authorized account:", account);
@@ -216,16 +217,14 @@ export default {
       if (from) {
         console.log("NewWave", from, timestamp, message);
       }
+      let newWave = {
+        address: from,
+        timestamp: new Date(timestamp * 1000),
+        message: message,
+      };
+      this.allWaves.unshift(newWave);
       this.getCount();
-
-      this.setAllWaves(prevState => [
-        {
-          address: from,
-          timestamp: new Date(timestamp * 1000),
-          message: message,
-        },
-        ...prevState,
-      ]);
+      this.getBalance();
     },
     setCurrentAccount(acc) {
       this.currentAccount = acc;
